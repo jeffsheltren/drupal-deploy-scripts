@@ -13,6 +13,7 @@
 
 DEPLOY_SETTINGS=/usr/local/deploy/deploy_settings
 SAVE_RELEASES=10
+RELEASE_DIR_NAME=releases
 NOOP=false
 
 usage() {
@@ -77,11 +78,24 @@ then
   exit 1
 fi
 
+# Ensure $WEBROOT_SYMLINK_NAME is set.
+if [ -z "${WEBROOT_SYMLINK_NAME}" ]
+then
+  echo "WEBROOT_SYMLINK_NAME is not set. Perhaps deploy_settings isn't readable?"
+  exit 1
+fi
+
 RELEASE_DIR=${BASEDIR}/${RELEASE_DIR_NAME}
+
+# Ensure release dir is not accidentally set to BASEDIR.
+if [ "${RELEASE_DIR}" == "${BASEDIR}/" ]
+  echo "Release directory is the same as the base directory, bailing out."
+  exit 1
+fi
 
 # Get list of releases to remove.
 TO_REMOVE=$(ls -1t $RELEASE_DIR | tail -n +${SAVE_RELEASES})
-CUR_TAG=$(readlink -f ${BASEDIR}/${WEBROOT_SYMLINK_NAME} | awk -F'/' '{print $(NF-1)}')
+CUR_TAG=$(readlink ${BASEDIR}/${WEBROOT_SYMLINK_NAME} | awk -F'/' '{print $(NF-1)}')
 
 echo "Current running tag is: ${CUR_TAG}"
 
